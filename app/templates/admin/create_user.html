@@ -43,6 +43,7 @@
                 <div class="card-body p-4">
 
                     <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <!-- Personal Information -->
                         <h6 class="fw-bold mb-3">
                             <i class="bi bi-person-vcard me-2 text-primary"></i>
@@ -59,6 +60,7 @@
                                     type="text"
                                     id="full_name"
                                     name="full_name"
+                                    value="{{ form.get('full_name', '') }}"
                                     class="form-control"
                                     placeholder="Enter full name"
                                     autocomplete="name"
@@ -71,6 +73,7 @@
                                     type="tel"
                                     id="phone"
                                     name="phone"
+                                    value="{{ form.get('phone', '') }}"
                                     class="form-control"
                                     placeholder="Enter phone number"
                                     autocomplete="tel">
@@ -84,6 +87,7 @@
                                     type="text"
                                     id="username"
                                     name="username"
+                                    value="{{ form.get('username', '') }}"
                                     class="form-control"
                                     placeholder="Choose a username"
                                     autocomplete="username"
@@ -98,6 +102,7 @@
                                     type="email"
                                     id="email"
                                     name="email"
+                                    value="{{ form.get('email', '') }}"
                                     class="form-control"
                                     placeholder="name@example.com"
                                     autocomplete="email"
@@ -125,13 +130,7 @@
                                     name="role"
                                     class="form-select"
                                     required>
-                                    <option value="receptionist">Receptionist</option>
-                                    <option value="doctor">Doctor</option>
-                                    <option value="nurse">Nurse</option>
-                                    <option value="pharmacist">Pharmacist</option>
-                                    <option value="lab_tech">Lab Technician</option>
-                                    <option value="radiologist">Radiologist</option>
-                                    <option value="admin">Administrator</option>
+                                    {% for rv, rl in roles %}<option value="{{ rv }}" {{ 'selected' if form.get('role') == rv else '' }}>{{ rl }}</option>{% endfor %}
                                 </select>
                                 <div class="form-text">
                                     Select the access role for this account.
@@ -147,7 +146,7 @@
                                     id="password"
                                     name="password"
                                     class="form-control"
-                                    placeholder="Create a strong password"
+                                    placeholder="Minimum 8 characters" minlength="8"
                                     autocomplete="new-password"
                                     required>
                                 <div class="form-text">

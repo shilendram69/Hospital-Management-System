@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add' if is_new else 'Edit' }} {{ e.singular }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h2 class="fw-bold mb-1"><i class="bi {{ e.icon }} me-2 text-primary"></i>{{ 'Add' if is_new else 'Edit' }} {{ e.singular }}</h2>
+      <p class="text-muted mb-0">Fields marked <span class="text-danger">*</span> are required.</p>
+    </div>
+    <a href="{{ url_for('manage.list_entity', entity=key) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-2"></i>Back to {{ e.plural }}</a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+      <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+          {% if note %}<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>{{ note }}</div>{% endif %}
+          <form method="POST" autocomplete="off">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="row g-3">
+              {% for f in fields %}
+                {% if f.section %}
+                <div class="col-12 {{ 'mt-4' if not loop.first }}">
+                  <h6 class="fw-bold border-bottom pb-2 mb-0"><i class="bi bi-chevron-right text-primary"></i> {{ f.section }}</h6>
+                </div>
+                {% endif %}
+                <div class="col-12 col-md-{{ f.col or 6 }}">
+                  {% set val = data.get(f.name, '') %}
+                  {% if f.type == 'checkbox' %}
+                    <div class="form-check form-switch mt-4 pt-2">
+                      <input class="form-check-input" type="checkbox" role="switch" id="f_{{ f.name }}" name="{{ f.name }}" {{ 'checked' if val else '' }}>
+                      <label class="form-check-label fw-semibold" for="f_{{ f.name }}">{{ f.label }}</label>
+                    </div>
+                  {% else %}
+                    <label class="form-label fw-semibold" for="f_{{ f.name }}">{{ f.label }}{% if f.required %} <span class="text-danger">*</span>{% endif %}</label>
+                    {% if f.type == 'textarea' %}
+                      <textarea class="form-control" rows="3" id="f_{{ f.name }}" name="{{ f.name }}" {% if f.maxlength %}maxlength="{{ f.maxlength }}"{% endif %}>{{ val }}</textarea>
+                    {% elif f.type == 'select' %}
+                      <select class="form-select" id="f_{{ f.name }}" name="{{ f.name }}" {{ 'required' if f.required else '' }}>
+                        <option value="">{{ '-- Select --' if f.required else '-- None --' }}</option>
+                        {% for ov, ol in f.options %}
+                        <option value="{{ ov }}" {{ 'selected' if (val|string) == (ov|string) else '' }}>{{ ol }}</option>
+                        {% endfor %}
+                      </select>
+                      {% if not f.options %}<div class="form-text text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No options available yet - add them first.</div>{% endif %}
+                    {% elif f.type == 'number' %}
+                      <input type="number" class="form-control" id="f_{{ f.name }}" name="{{ f.name }}" value="{{ val }}"
+                             step="{{ 'any' if f.kind == 'float' else 1 }}" {% if f.min is not none and f.min is defined %}min="{{ f.min }}"{% endif %}
+                             {% if f.max is defined and f.max is not none %}max="{{ f.max }}"{% endif %} {{ 'required' if f.required else '' }}>
+                    {% elif f.type == 'password' %}
+                      <input type="password" class="form-control" id="f_{{ f.name }}" name="{{ f.name }}" autocomplete="new-password" minlength="8" {{ 'required' if f.required else '' }}>
+                    {% else %}
+                      <input type="{{ f.type if f.type in ('email','date') else 'text' }}" class="form-control" id="f_{{ f.name }}" name="{{ f.name }}" value="{{ val }}"
+                             {% if f.maxlength %}maxlength="{{ f.maxlength }}"{% endif %} {{ 'required' if f.required else '' }}
+                             {% if f.upper %}style="text-transform:uppercase"{% endif %}>
+                    {% endif %}
+                    {% if f.help %}<div class="form-text">{{ f.help }}</div>{% endif %}
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+            <div class="d-flex flex-wrap justify-content-end gap-2 mt-4 pt-3 border-top">
+              <a href="{{ url_for('manage.list_entity', entity=key) }}" class="btn btn-light border">Cancel</a>
+              <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check2-circle me-2"></i>{{ 'Save' if is_new else 'Update' }} {{ e.singular }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

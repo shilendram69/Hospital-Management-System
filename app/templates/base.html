@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>{% block title %}Dashboard{% endblock %} | City Care Hospital</title>
+    <title>{% block title %}Dashboard{% endblock %} | {{ hospital_name }}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -149,6 +149,13 @@
                 </a>
 
                 {% if current_user.role == 'admin' %}
+                <a class="sidebar-link" href="{{ url_for('manage.hub') }}">
+                    <i class="bi bi-sliders"></i>
+                    <span>Setup &amp; Master Data</span>
+                </a>
+                {% endif %}
+
+                {% if current_user.role == 'admin' %}
                 <a class="sidebar-link" href="{{ url_for('admin.index') }}">
                     <i class="bi bi-shield-lock"></i>
                     <span>Administration</span>
@@ -243,6 +250,15 @@
                 {% endfor %}
                 {% endif %}
                 {% endwith %}
+
+                {% if manage_shortcuts %}
+                <div class="d-flex flex-wrap justify-content-end gap-2 mb-3">
+                    {% for sc in manage_shortcuts %}
+                    <a class="btn btn-sm btn-primary" href="{{ sc.add_url }}"><i class="bi bi-plus-circle me-1"></i>Add {{ sc.singular }}</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ sc.url }}"><i class="bi bi-gear me-1"></i>{{ sc.label }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
 
                 {% block content %}{% endblock %}
 

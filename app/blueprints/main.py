@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from app.models import (
     Patient, Appointment, Admission, Bill, Medicine, LabOrder,
@@ -17,7 +17,6 @@ def index():
 
 
 def redirect_to_dashboard():
-    from flask import redirect, url_for
     return redirect(url_for('main.dashboard'))
 
 
@@ -69,8 +68,13 @@ def dashboard():
         'today_revenue': today_revenue or 0,
     }
     
+    setup_pending = []
+    if current_user.role == 'admin':
+        from app.blueprints.masters import get_setup_steps
+        setup_pending = [st for st in get_setup_steps() if not st['done']]
+
     return render_template('dashboard.html', stats=stats, todays_appts=todays_appts,
-                           recent_patients=recent_patients, today=today)
+                           recent_patients=recent_patients, today=today, setup_pending=setup_pending)
 
 
 # Import db for the revenue query

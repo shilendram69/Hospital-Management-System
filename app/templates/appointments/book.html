@@ -39,6 +39,7 @@
     </div>
 
     <form method="POST" id="bookAppointmentForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Patient and Doctor -->
         <div class="card booking-section-card mb-4">

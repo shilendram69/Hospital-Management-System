@@ -145,6 +145,7 @@
 
             <form method="POST"
                   onsubmit="return confirm('Confirm dispensing this prescription? Please verify all medicine details and quantities before proceeding.');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div class="small text-muted">
                         <i class="bi bi-shield-check me-1"></i>

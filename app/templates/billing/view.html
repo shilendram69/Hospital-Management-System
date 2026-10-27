@@ -208,6 +208,7 @@
 
                     <form method="POST"
                           action="{{ url_for('billing.add_payment', id=bill.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <div class="mb-3">
                             <label for="amount" class="form-label fw-semibold">

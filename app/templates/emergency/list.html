@@ -116,6 +116,7 @@
                         <td>
                             <form method="POST"
                                   action="{{ url_for('emergency.update_status', id=v.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <label class="visually-hidden" for="status-{{ v.id }}">
                                     Update status for visit {{ v.id }}
                                 </label>

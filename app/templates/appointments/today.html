@@ -161,6 +161,7 @@
                             <form method="POST"
                                   action="{{ url_for('appointments.update_status', id=a.id) }}"
                                   class="queue-action-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                 <label for="queue-status-{{ a.id }}" class="visually-hidden">
                                     Update appointment status

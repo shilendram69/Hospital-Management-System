@@ -44,7 +44,7 @@ class AuditLog(db.Model):
     entity_id = db.Column(db.Integer)
     details = db.Column(db.Text)
     ip_address = db.Column(db.String(45))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 # ==================== DEPARTMENT & DOCTOR ====================
@@ -53,7 +53,7 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.Text)
-    head_doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=True)
+    head_doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id', use_alter=True, name='fk_departments_head_doctor'), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -145,10 +145,10 @@ class Patient(db.Model):
 class Appointment(db.Model):
     __tablename__ = 'appointments'
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
-    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False, index=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False, index=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
-    appointment_date = db.Column(db.Date, nullable=False)
+    appointment_date = db.Column(db.Date, nullable=False, index=True)
     appointment_time = db.Column(db.String(10), nullable=False)  # HH:MM
     status = db.Column(db.String(20), default='Scheduled')  # Scheduled, Confirmed, In Progress, Completed, Cancelled, No-Show
     appointment_type = db.Column(db.String(30), default='OPD')  # OPD, Follow-up, Emergency, Telemedicine
@@ -170,8 +170,8 @@ class Appointment(db.Model):
 class MedicalRecord(db.Model):
     __tablename__ = 'medical_records'
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
-    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False, index=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False, index=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'))
     visit_date = db.Column(db.DateTime, default=datetime.utcnow)
     chief_complaint = db.Column(db.Text)
@@ -273,14 +273,14 @@ class Bed(db.Model):
 class Admission(db.Model):
     __tablename__ = 'admissions'
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False, index=True)
     bed_id = db.Column(db.Integer, db.ForeignKey('beds.id'))
     admitting_doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'))
     admission_date = db.Column(db.DateTime, default=datetime.utcnow)
     expected_discharge = db.Column(db.Date)
     actual_discharge = db.Column(db.DateTime)
     admission_type = db.Column(db.String(30), default='Elective')  # Elective, Emergency, Transfer
-    status = db.Column(db.String(20), default='Admitted')  # Admitted, Discharged, Transferred
+    status = db.Column(db.String(20), default='Admitted', index=True)  # Admitted, Discharged, Transferred
     reason = db.Column(db.Text)
     diagnosis_on_admission = db.Column(db.Text)
     discharge_summary = db.Column(db.Text)
@@ -400,12 +400,12 @@ class LabOrder(db.Model):
     __tablename__ = 'lab_orders'
     id = db.Column(db.Integer, primary_key=True)
     order_number = db.Column(db.String(20), unique=True, nullable=False)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False, index=True)
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'))
     ordered_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     order_date = db.Column(db.DateTime, default=datetime.utcnow)
     priority = db.Column(db.String(20), default='Routine')  # Routine, Urgent, STAT
-    status = db.Column(db.String(20), default='Ordered')  # Ordered, Sample Collected, In Progress, Completed, Cancelled
+    status = db.Column(db.String(20), default='Ordered', index=True)  # Ordered, Sample Collected, In Progress, Completed, Cancelled
     clinical_notes = db.Column(db.Text)
     sample_collected_at = db.Column(db.DateTime)
     sample_collected_by = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -442,7 +442,7 @@ class Bill(db.Model):
     __tablename__ = 'bills'
     id = db.Column(db.Integer, primary_key=True)
     bill_number = db.Column(db.String(20), unique=True, nullable=False)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False, index=True)
     admission_id = db.Column(db.Integer, db.ForeignKey('admissions.id'))
     bill_date = db.Column(db.DateTime, default=datetime.utcnow)
     bill_type = db.Column(db.String(30), default='OPD')  # OPD, IPD, Pharmacy, Lab, Package

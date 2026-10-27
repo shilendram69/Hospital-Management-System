@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ e.plural }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <a href="{{ url_for('manage.hub') }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Setup &amp; Master Data</a>
+      <h2 class="fw-bold mb-1 mt-1"><i class="bi {{ e.icon }} me-2 text-primary"></i>{{ e.plural }}</h2>
+      <p class="text-muted mb-0">{{ e.desc }}</p>
+    </div>
+    <a href="{{ url_for('manage.create_entity', entity=key) }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle me-2"></i>Add {{ e.singular }}
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-header bg-white border-bottom p-3">
+      <form method="GET" class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+        <div class="input-group" style="max-width:360px">
+          <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+          <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="Search {{ e.plural|lower }}...">
+          <button class="btn btn-outline-primary">Search</button>
+        </div>
+        <span class="text-muted small">{{ pagination.total }} record(s)</span>
+      </form>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            {% for col in e.columns %}<th class="py-3 {{ 'ps-3' if loop.first }}">{{ col[0] }}</th>{% endfor %}
+            <th class="text-end py-3 pe-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in pagination.items %}
+          <tr>
+            {% for col in e.columns %}
+              {% set v = col[1](o) %}
+              <td class="{{ 'ps-3 fw-semibold' if loop.first }}">
+                {% if col[0] == 'Status' %}
+                  {% set good = v in ('Active', 'Available') %}
+                  {% set warn = v in ('Maintenance', 'Reserved') %}
+                  <span class="badge rounded-pill bg-{{ 'success' if good else ('warning' if warn else 'danger') }}-subtle text-{{ 'success' if good else ('warning' if warn else 'danger') }}">{{ v }}</span>
+                {% else %}{{ v }}{% endif %}
+              </td>
+            {% endfor %}
+            <td class="text-end pe-3 text-nowrap">
+              <a href="{{ url_for('manage.edit_entity', entity=key, id=o.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil-square me-1"></i>Edit</a>
+              {% if e.toggle %}
+                {% set on = (o|attr(e.toggle)) %}
+                <form method="POST" action="{{ url_for('manage.toggle_entity', entity=key, id=o.id) }}" class="d-inline"
+                      onsubmit="return confirm('Are you sure?');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm {{ 'btn-outline-danger' if on else 'btn-outline-success' }}">
+                    {% if e.toggle_labels %}{{ e.toggle_labels[0] if on else e.toggle_labels[1] }}{% else %}{{ 'Deactivate' if on else 'Activate' }}{% endif %}
+                  </button>
+                </form>
+              {% endif %}
+              {% if e.deletable and e.can_delete(o)[0] %}
+                <form method="POST" action="{{ url_for('manage.delete_entity', entity=key, id=o.id) }}" class="d-inline"
+                      onsubmit="return confirm('Delete this record permanently?');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="{{ e.columns|length + 1 }}" class="text-center py-5">
+            <i class="bi {{ e.icon }} fs-1 text-muted"></i>
+            <p class="fw-semibold mt-3 mb-1">No {{ e.plural|lower }} yet</p>
+            <p class="small text-muted mb-3">{{ 'No results match your search.' if q else 'Nothing has been added - the database is empty until you add records.' }}</p>
+            <a href="{{ url_for('manage.create_entity', entity=key) }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Add {{ e.singular }}</a>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white">
+      <nav><ul class="pagination pagination-sm mb-0 justify-content-end">
+        <li class="page-item {{ 'disabled' if not pagination.has_prev }}"><a class="page-link" href="{{ url_for('manage.list_entity', entity=key, page=pagination.prev_num, q=q) if pagination.has_prev else '#' }}">&laquo;</a></li>
+        {% for p in pagination.iter_pages() %}
+          {% if p %}<li class="page-item {{ 'active' if p == pagination.page }}"><a class="page-link" href="{{ url_for('manage.list_entity', entity=key, page=p, q=q) }}">{{ p }}</a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link">&hellip;</span></li>{% endif %}
+        {% endfor %}
+        <li class="page-item {{ 'disabled' if not pagination.has_next }}"><a class="page-link" href="{{ url_for('manage.list_entity', entity=key, page=pagination.next_num, q=q) if pagination.has_next else '#' }}">&raquo;</a></li>
+      </ul></nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

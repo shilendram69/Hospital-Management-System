@@ -27,6 +27,31 @@
         </div>
     </div>
 
+    {% if staff_options %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-3">
+            <form method="POST" action="{{ url_for('staff.mark_attendance') }}" class="row g-2 align-items-end">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="col-md-5">
+                    <label class="form-label small fw-semibold mb-1">Staff member</label>
+                    <select name="staff_id" class="form-select" required>
+                        <option value="">-- Select --</option>
+                        {% for st in staff_options %}<option value="{{ st.id }}">{{ st.user.full_name if st.user else st.employee_id }} ({{ st.employee_id }})</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold mb-1">Status</label>
+                    <select name="status" class="form-select">{% for s_ in statuses %}<option>{{ s_ }}</option>{% endfor %}</select>
+                </div>
+                <div class="col-md-4 d-flex gap-2">
+                    <button name="action" value="check_in" class="btn btn-primary flex-fill"><i class="bi bi-box-arrow-in-right me-1"></i>Check In / Mark</button>
+                    <button name="action" value="check_out" class="btn btn-outline-secondary flex-fill"><i class="bi bi-box-arrow-right me-1"></i>Check Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
         <div class="col-12 col-md-6">

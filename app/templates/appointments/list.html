@@ -160,6 +160,7 @@
                             <form method="POST"
                                   action="{{ url_for('appointments.update_status', id=a.id) }}"
                                   class="appointment-status-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                                 <label class="visually-hidden" for="status-{{ a.id }}">
                                     Update status for appointment {{ a.id }}

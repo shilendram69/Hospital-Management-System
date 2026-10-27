@@ -45,6 +45,7 @@
     </div>
 
     <form method="POST" id="editPatientForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- Personal Information -->
         <div class="card edit-section-card mb-4">

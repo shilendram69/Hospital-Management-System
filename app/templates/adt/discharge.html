@@ -57,6 +57,7 @@
 
     <!-- Discharge Form -->
     <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-header bg-white border-bottom py-3 rounded-top-4">

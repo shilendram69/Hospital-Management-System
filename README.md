@@ -1,141 +1,80 @@
 # City Care Hospital Management System (HMS)
 
-A professional, modular **Flask-based Hospital Management System** covering the complete roadmap:
+Flask + PostgreSQL (Neon) hospital management system.
+**The database starts completely empty** - no demo doctors, patients, medicines or users.
+Everything is entered by you through the app.
 
-- Patient Management (UHID, demographics, history, allergies)
-- Appointment Management (booking, queue, status, walk-ins)
-- Doctor & Department Management
-- Billing & Payments (multi-item bills, payments, insurance claims stub)
-- Medical Records & Prescriptions
-- ADT (Admission, Discharge, Transfer) with bed management
-- Pharmacy (inventory, batches, dispensing, stock movements)
-- Laboratory Information System (orders, sample tracking, results)
-- Staff / HR basics
-- Role-Based Access Control & Audit Logs
-- Inventory (equipment & consumables)
-- Emergency & Triage
-- Nursing notes & clinical workflow
-- Radiology orders & reports
-- Reports & Analytics dashboard
-- Patient Portal (UHID lookup)
-- Security foundations (hashed passwords, sessions, audit trail)
+## 1. Configure the database (`.env`)
 
-## Quick Start
+The `.env` file in the project root holds the connection:
 
-```bash
-# 1. Create virtual environment (recommended)
-python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Run the application
-python run.py
+```env
+DATA_BASE_URL=postgresql://USER:PASSWORD@HOST/DBNAME?sslmode=require&channel_binding=require
+SECRET_KEY=<long random string>
+FLASK_DEBUG=0
 ```
 
-Open **http://127.0.0.1:5000** in your browser.
+`.env.example` is a template. **Never commit `.env`** (it is already in `.gitignore`).
 
-## Demo Credentials
+## 2. Run
 
-| Role         | Username     | Password    |
-|--------------|--------------|-------------|
-| Admin        | `admin`      | `admin123`  |
-| Doctor       | `dr.smith`   | `doctor123` |
-| Doctor       | `dr.patel`   | `doctor123` |
-| Receptionist | `reception`  | `recep123`  |
-| Pharmacist   | `pharmacist` | `pharma123` |
-| Lab Tech     | `labtech`    | `lab123`    |
-| Nurse        | `nurse.rita` | `nurse123`  |
+```bash
+python -m venv venv
+source venv/bin/activate            # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python run.py                       # http://127.0.0.1:5000
+```
 
-## Project Structure
+Production: `gunicorn -w 3 run:app`
+
+On every start the app connects to PostgreSQL and **creates any missing tables (empty)**.
+Existing tables and data are never touched or reset.
+
+## 3. First-time flow
+
+1. Open the site -> you are redirected to **/setup** (only this page works until an admin exists).
+2. Create the **Administrator** account (name, username, email, password >= 8 chars). `/setup` is then permanently disabled.
+3. You land on **Setup & Master Data** (sidebar -> *Setup & Master Data*) with a checklist:
+   1. Departments  2. Doctors (creates the doctor's login too)  3. Wards (can auto-create beds)  4. Beds
+   5. Lab tests  6. Radiology tests  7. Medicines (+ Suppliers)  8. Staff  - plus Inventory items
+4. Create other users from *Administration -> Create User* (or while adding doctors / staff).
+
+Add / Manage buttons also appear on the Doctors, Departments, Beds, Pharmacy, Lab, Radiology, Inventory and Staff pages.
+
+| Master data | Who can manage |
+|---|---|
+| Departments, Doctors, Staff, Wards, Beds | Admin |
+| Medicines, Suppliers | Admin, Pharmacist |
+| Lab tests | Admin, Lab technician |
+| Radiology tests | Admin, Radiologist |
+| Inventory items | Admin, Nurse |
+
+## 4. What changed vs. the original project
+
+* SQLite -> **PostgreSQL** (`psycopg2`), connection pooling tuned for Neon (`pool_pre_ping`, recycle).
+* **All seed / demo data removed** (`seed.py` deleted, SQLite file removed).
+* Empty tables auto-created at startup (advisory-lock protected, retries while Neon wakes up).
+* **First-run admin setup** page; no default passwords anywhere.
+* New master-data screens (add / edit / activate / delete where safe) with duplicate checks and audit log.
+* CSRF protection on every form, safe `next=` redirect, deactivated users are logged out, change-password page, admin edit/reset-password for users.
+* Staff attendance can now be marked (admin).
+* DB indexes on frequently queried columns; circular FK (`departments` <-> `doctors`) handled for PostgreSQL.
+
+## 5. Project structure
 
 ```
 hms_flask/
-├── app/
-│   ├── __init__.py          # Application factory
-│   ├── models.py            # All database models
-│   ├── blueprints/          # Modular feature blueprints
-│   │   ├── auth.py
-│   │   ├── patients.py
-│   │   ├── appointments.py
-│   │   ├── billing.py
-│   │   ├── adt.py
-│   │   ├── pharmacy.py
-│   │   ├── lab.py
-│   │   ├── emergency.py
-│   │   ├── nursing.py
-│   │   ├── radiology.py
-│   │   └── ...
-│   ├── templates/           # Jinja2 + Bootstrap 5 UI
-│   ├── static/              # CSS, JS
-│   └── utils/seed.py        # Sample data seeder
-├── config.py
-├── requirements.txt
-├── run.py
-└── README.md
+|-- run.py  config.py  requirements.txt  .env  .env.example  Procfile
+`-- app/
+    |-- __init__.py            # factory: DB init, setup gate, CSRF, error pages
+    |-- models.py
+    |-- utils/db_init.py       # creates missing tables
+    |-- utils/decorators.py
+    |-- blueprints/            # auth, masters (setup screens), patients, billing, adt, ...
+    `-- templates/ static/
 ```
 
-## Features by Module
+## 6. Security notes
 
-### 1. Patient Management
-- Unique Hospital ID (UHID) generation
-- Full demographics, emergency contact, insurance
-- Medical history, allergies, chronic conditions
-- Visit history, linked appointments, records, bills
-
-### 2. Appointments
-- Doctor/department based booking
-- Queue numbers, walk-ins, status workflow
-- Today’s queue view for OPD
-
-### 3. ADT
-- Ward & bed master with real-time availability
-- Admission → Transfer → Discharge with summary
-- Length of stay calculation
-
-### 4. Pharmacy
-- Medicine master with reorder levels
-- Batch tracking & expiry
-- Stock-in / stock-out movements
-- Prescription dispensing with auto stock deduction
-
-### 5. Laboratory
-- Test catalog with TAT & pricing
-- Order creation (multi-test)
-- Sample collection → Result entry → Abnormal flagging
-
-### 6. Billing
-- Multi-item bills (consultation, lab, pharmacy, room…)
-- Discounts, payment recording (Cash/Card/UPI)
-- Outstanding balance tracking
-
-### 7. Clinical
-- Medical records with vitals & diagnosis
-- Prescription writing linked to records
-- Emergency triage (Critical → Non-Urgent)
-- Nursing notes with timeline
-
-### 8. Admin & Security
-- Role-based users (admin, doctor, nurse, receptionist, pharmacist, lab_tech…)
-- Audit log of important actions
-- Secure password hashing (Werkzeug)
-
-## Technology Stack
-
-- **Backend**: Flask 3, SQLAlchemy 2, Flask-Login, Flask-Migrate
-- **Database**: SQLite (default) — easily switchable to PostgreSQL/MySQL
-- **Frontend**: Bootstrap 5, Bootstrap Icons, custom CSS
-- **Auth**: Session-based with role checks
-
-## Production Notes
-
-1. Change `SECRET_KEY` in `config.py` or set environment variable.
-2. Use a production WSGI server: `gunicorn -w 4 run:app`
-3. Switch database URI to PostgreSQL for multi-user production.
-4. Configure proper backup of the `instance/` folder.
-5. Advanced modules (full PACS/DICOM, FHIR, ABDM, AI prediction) are structured for extension.
-
-## License
-
-Educational / demonstration use. Adapt freely for final-year projects or internal hospital systems.
+* Rotate the database password if it was ever shared in chat/email (Neon console -> Roles -> Reset password) and update `.env`.
+* Use a strong unique `SECRET_KEY` in production and serve over HTTPS.
